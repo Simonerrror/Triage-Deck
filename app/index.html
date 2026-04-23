@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>X Bookmark Triage Harness</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="stage">
+      <div class="ambient-feed" aria-hidden="true">
+        <div class="ambient-column">
+          <div class="ambient-chip wide"></div>
+          <div class="ambient-card tall"></div>
+          <div class="ambient-card short"></div>
+        </div>
+        <div class="ambient-column dim">
+          <div class="ambient-card short"></div>
+          <div class="ambient-card tall"></div>
+          <div class="ambient-chip"></div>
+        </div>
+      </div>
+
+      <button class="triage-launcher" id="triage-launcher" type="button" hidden>
+        <span class="triage-launcher__icon">↺</span>
+        <span>Open triage</span>
+      </button>
+
+      <section class="triage-shell" aria-label="X bookmark triage overlay">
+        <header class="triage-header">
+          <div class="triage-copy">
+            <div class="triage-title-row">
+              <h1>X Bookmark Triage</h1>
+              <span class="live-pill">
+                <span class="live-dot"></span>
+                Live session
+              </span>
+            </div>
+            <p>Review visible bookmarks from x.com/i/bookmarks</p>
+          </div>
+
+          <div class="triage-toolbar">
+            <div class="triage-progress-block">
+              <strong id="bookmark-position">1 of 4</strong>
+              <div class="overlay-progress" aria-hidden="true">
+                <span id="progress-bar"></span>
+              </div>
+            </div>
+            <button class="toolbar-button" id="undo-button" data-action="undo" type="button">
+              <span class="toolbar-icon">↩</span>
+              <span>Undo</span>
+            </button>
+            <button class="icon-button" id="close-button" data-action="close" type="button" aria-label="Close triage">×</button>
+            <button class="icon-button" type="button" aria-label="More options">⋮</button>
+          </div>
+        </header>
+
+        <section class="review-card" id="bookmark-card">
+          <div class="review-topline">
+            <span class="kind-pill" id="bookmark-category">Fun</span>
+            <a id="bookmark-link" class="handle-link" href="#" target="_blank" rel="noreferrer">
+              <span id="bookmark-handle">@brunopinheiroms</span>
+              <span class="external-mark">↗</span>
+            </a>
+          </div>
+
+          <h2 id="bookmark-title">Я полностью отказался от Claude</h2>
+
+          <p class="review-byline">
+            <span id="bookmark-author">Bruno Pinheiro</span>
+            <span class="byline-sep">•</span>
+            <span id="bookmark-date">2026-04-21</span>
+          </p>
+
+          <p id="bookmark-text" class="review-text"></p>
+
+          <div class="review-link-row">
+            <a class="original-link" href="#" id="bookmark-link-secondary" target="_blank" rel="noreferrer">
+              <span class="original-link__icon">⌘</span>
+              <span>Open original post</span>
+              <span class="external-mark">↗</span>
+            </a>
+
+            <div class="tag-row" id="bookmark-tags" aria-label="Bookmark tags"></div>
+          </div>
+
+          <section class="note-preview">
+            <div class="note-preview__header">
+              <span class="note-preview__icon">▣</span>
+              <span>Note preview (Inbox)</span>
+            </div>
+
+            <dl class="note-grid">
+              <div class="note-row">
+                <dt>Title:</dt>
+                <dd id="note-title">Я полностью отказался от Claude...</dd>
+              </div>
+              <div class="note-row">
+                <dt>Kind:</dt>
+                <dd>
+                  <span class="note-kind" id="note-kind">fun</span>
+                </dd>
+              </div>
+              <div class="note-row">
+                <dt>Path:</dt>
+                <dd id="note-path">Sergio/00_System/Inbox/X Bookmarks</dd>
+              </div>
+            </dl>
+
+            <button class="note-preview__toggle" type="button">Show more</button>
+          </section>
+        </section>
+
+        <section class="action-zone">
+          <div class="action-row">
+            <button class="action action-keep" data-action="keep" type="button">
+              <span class="action-icon">←</span>
+              <span class="action-copy">
+                <strong>Keep in X</strong>
+                <small>Leave bookmark</small>
+              </span>
+            </button>
+
+            <button class="action action-inbox" data-action="inbox" type="button">
+              <span class="action-icon">↓</span>
+              <span class="action-copy">
+                <strong>Send to Obsidian</strong>
+                <small>Save note and remove</small>
+              </span>
+            </button>
+
+            <button class="action action-delete" data-action="delete" type="button">
+              <span class="action-icon">→</span>
+              <span class="action-copy">
+                <strong>Delete</strong>
+                <small>Remove from X</small>
+              </span>
+            </button>
+          </div>
+
+          <div class="hotkeys-row" aria-hidden="true">
+            <span>← Keep</span>
+            <span>↓ Inbox</span>
+            <span>→ Delete</span>
+          </div>
+
+          <div class="session-strip">
+            <div class="session-primary">
+              <span class="session-primary__icon">☰</span>
+              <div class="session-primary__copy">
+                <strong id="queue-left">4 left</strong>
+                <span>in queue</span>
+              </div>
+            </div>
+
+            <div class="session-metric">
+              <strong id="kept-count">0</strong>
+              <span>kept</span>
+            </div>
+
+            <div class="session-metric">
+              <strong id="deleted-count">0</strong>
+              <span>deleted</span>
+            </div>
+
+            <div class="session-metric">
+              <strong id="inboxed-count">0</strong>
+              <span>inboxed</span>
+            </div>
+
+            <div class="session-status">
+              <span class="session-status__icon">✓</span>
+              <div class="session-status__copy">
+                <strong id="status-label">Ready</strong>
+                <span id="status-caption">for triage</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="utility-row">
+            <button class="utility-button utility-button--wide" data-action="restart" type="button">
+              <span class="utility-icon">↺</span>
+              <span class="utility-copy">
+                <strong>Restart session</strong>
+                <small>Reset review state and rescan</small>
+              </span>
+            </button>
+
+            <button class="utility-button" type="button">
+              <span class="utility-icon">▭</span>
+              <span class="utility-copy">
+                <strong>Compact mode</strong>
+              </span>
+            </button>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

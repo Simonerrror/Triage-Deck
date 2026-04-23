@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Local environment
+.env
+.env.*
+*.local
+
+# Logs and runtime state
+*.log
+logs/
+tmp/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Optional local captures
+captures/
