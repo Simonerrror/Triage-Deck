@@ -88,6 +88,7 @@
       pending: false,
       lastError: "",
       lastCheckedAt: 0,
+      restartAllowed: false,
     },
   };
 
@@ -273,6 +274,11 @@
     }
 
     .xbt-bridge-indicator[data-status="down"] .xbt-bridge-indicator-dot {
+      background: #e05757;
+      box-shadow: 0 0 0 3px rgba(224, 87, 87, 0.16);
+    }
+
+    .xbt-bridge-indicator[data-status="degraded"] .xbt-bridge-indicator-dot {
       background: #e05757;
       box-shadow: 0 0 0 3px rgba(224, 87, 87, 0.16);
     }
@@ -1021,6 +1027,10 @@
       return "Checking bridge";
     }
 
+    if (state.bridge.status === "degraded") {
+      return state.bridge.restartAllowed ? "Bridge degraded; click to restart" : "Bridge degraded";
+    }
+
     return "Bridge down";
   }
 
@@ -1503,7 +1513,8 @@
       });
 
       const healthy = response.ok && response.payload?.ok;
-      state.bridge.status = healthy ? "up" : "down";
+      state.bridge.restartAllowed = Boolean(response.payload?.restart_allowed);
+      state.bridge.status = healthy ? "up" : "degraded";
       state.bridge.lastError = healthy
         ? ""
         : response.payload?.vault_error || response.payload?.error || `Bridge health returned ${response.status || "unknown status"}`;
@@ -1513,6 +1524,7 @@
     } catch (error) {
       state.bridge.status = "down";
       state.bridge.lastError = error.message;
+      state.bridge.restartAllowed = false;
       state.bridge.lastCheckedAt = Date.now();
       renderBridgeStatus();
       return false;
@@ -1523,7 +1535,11 @@
 
   async function requestBridgeRestart() {
     if (!CONFIG.cliBridgeRestartUrl) {
-      return false;
+      return {
+        ok: false,
+        status: 0,
+        payload: { error: "Bridge restart URL is not configured." },
+      };
     }
 
     try {
@@ -1534,9 +1550,13 @@
         timeoutMs: 2500,
       });
 
-      return response.ok;
+      return response;
     } catch {
-      return false;
+      return {
+        ok: false,
+        status: 0,
+        payload: null,
+      };
     }
   }
 
@@ -1545,9 +1565,24 @@
       return;
     }
 
-    if (state.bridge.status === "up") {
-      await checkBridgeHealth();
+    const reachable = await checkBridgeHealth();
+    if (reachable) {
       showToast("Bridge is active.");
+      return;
+    }
+
+    if (state.bridge.status === "down") {
+      showToast("Bridge is not running. Start the local bridge from terminal, then click the lamp again.");
+      return;
+    }
+
+    if (!state.bridge.restartAllowed) {
+      showToast("Bridge restart is disabled. Enable XBT_BRIDGE_ALLOW_RESTART=1 and restart the bridge manually.");
+      return;
+    }
+
+    if (!window.confirm("Restart the local Triage Deck bridge process?")) {
+      showToast("Bridge restart canceled.");
       return;
     }
 
@@ -1555,23 +1590,18 @@
     state.bridge.lastError = "";
     renderBridgeStatus();
 
-    const restartAccepted = await requestBridgeRestart();
-    if (restartAccepted) {
-      await wait(500);
+    const restartResponse = await requestBridgeRestart();
+    if (restartResponse.ok) {
+      await wait(900);
       const healthy = await checkBridgeHealth();
-      showToast(healthy ? "Bridge restarted." : "Restart requested, but bridge is still red.");
+      showToast(healthy ? "Bridge restarted." : "Restart requested; bridge is still degraded.");
       return;
     }
 
-    const healthy = await checkBridgeHealth();
-    if (healthy) {
-      showToast("Bridge is active again.");
-      return;
-    }
-
-    const restartCommand = "cd /path/to/Triage-Deck && python3 scripts/obsidian_bridge.py";
-    const copied = await tryClipboardWrite(restartCommand);
-    showToast(copied ? "Bridge is down. Restart command copied." : "Bridge is down. Start local bridge from terminal.");
+    state.bridge.status = "degraded";
+    state.bridge.lastError = restartResponse.payload?.error || `Restart failed with ${restartResponse.status || "unknown status"}`;
+    renderBridgeStatus();
+    showToast(state.bridge.lastError);
   }
 
   function installUi() {

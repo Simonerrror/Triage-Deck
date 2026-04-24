@@ -133,7 +133,7 @@ Adaptation rules:
 - If a CLI binary is not on `PATH`, use an absolute path or switch to direct file writes.
 - Keep `XBT_ALLOWED_FOLDER_PREFIX` narrow.
 - If the bridge writes directly to disk, normalize paths per OS and reject `..` path traversal.
-- Restart is disabled by default. Enable it only when needed with `XBT_BRIDGE_ALLOW_RESTART=1`; if `XBT_BRIDGE_TOKEN` is set, `/restart` must require the same token as `/capture`.
+- Restart is disabled by default. Enable it only when needed with `XBT_BRIDGE_ALLOW_RESTART=1`; if `XBT_BRIDGE_TOKEN` is set, `/restart` must require the same token as `/capture`. Browser UI should only offer restart after `/health` responds with `restart_allowed: true`; if the bridge is not reachable, tell the user to start it manually.
 
 ## 5. Install Path
 

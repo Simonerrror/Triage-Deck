@@ -137,6 +137,7 @@ An adaptation is done when:
 
 - the user can start the bridge on their OS
 - `/health` returns a useful result
+- the bridge lamp does not offer restart unless `/health` reports `restart_allowed: true`
 - the panel appears only on `x.com/i/bookmarks`
 - `Update` finds visible bookmarks
 - `Keep` advances without touching X
