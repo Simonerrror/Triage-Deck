@@ -144,7 +144,7 @@ Panel controls:
 
 - `Update`: rescan visible bookmarks.
 - `Shift+Update`: restart reviewed state for the visible set.
-- green/red lamp: bridge health.
+- green/red lamp: bridge health. Green rechecks `/health`; red shows the failure. If the bridge is reachable, degraded, and `restart_allowed` is true, clicking the lamp asks for confirmation before calling `POST /restart`.
 - `x`: hide panel; the launcher can reopen it.
 
 ## Platform Notes
@@ -227,7 +227,7 @@ Before publishing a personal fork, review:
 - default vault/folder names
 - hardcoded local paths
 - bridge token settings
-- whether `POST /restart` should be enabled with `XBT_BRIDGE_ALLOW_RESTART=1`; it is disabled by default and token-protected when `XBT_BRIDGE_TOKEN` is set
+- whether `POST /restart` should be enabled with `XBT_BRIDGE_ALLOW_RESTART=1`; it is disabled by default, token-protected when `XBT_BRIDGE_TOKEN` is set, and only useful when the bridge process is still reachable
 
 ## Development
 

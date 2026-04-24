@@ -135,6 +135,7 @@ def health_payload() -> tuple[int, dict]:
             "status": "up" if healthy else "degraded",
             "host": HOST,
             "port": PORT,
+            "pid": os.getpid(),
             "obsidian_bin": OBSIDIAN_BIN,
             "obsidian_bin_path": obsidian_bin_path,
             "vault": DEFAULT_VAULT,
@@ -144,6 +145,11 @@ def health_payload() -> tuple[int, dict]:
             "allowed_folder_prefix": ALLOWED_FOLDER_PREFIX,
             "token_required": bool(TOKEN),
             "restart_allowed": ALLOW_RESTART,
+            "restart_hint": (
+                "POST /restart is available."
+                if ALLOW_RESTART
+                else "Set XBT_BRIDGE_ALLOW_RESTART=1 and restart the bridge manually to enable POST /restart."
+            ),
             "checks": checks,
         },
     )
@@ -188,10 +194,17 @@ class BridgeHandler(BaseHTTPRequestHandler):
 
         if self.path == "/restart":
             if not ALLOW_RESTART:
-                json_response(self, 403, {"ok": False, "error": "Bridge restart is disabled."})
+                json_response(
+                    self,
+                    403,
+                    {
+                        "ok": False,
+                        "error": "Bridge restart is disabled. Set XBT_BRIDGE_ALLOW_RESTART=1 and restart the bridge manually.",
+                    },
+                )
                 return
 
-            json_response(self, 202, {"ok": True, "status": "restarting"})
+            json_response(self, 202, {"ok": True, "status": "restarting", "pid": os.getpid()})
             threading.Thread(target=restart_process, daemon=True).start()
             return
 
