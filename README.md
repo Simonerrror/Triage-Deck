@@ -134,7 +134,7 @@ Open:
 https://x.com/i/bookmarks
 ```
 
-The panel should appear only on the bookmarks route.
+The userscript is allowed to run on X/Twitter pages so it can survive SPA navigation. The panel itself appears only on the bookmarks route.
 
 Keyboard:
 

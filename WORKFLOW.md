@@ -111,7 +111,7 @@ Common fields:
 - `learningKeywords`: user-specific classification terms.
 - `removeLabels` and `bookmarkedLabels`: add localized X labels if the user's browser language differs.
 
-Do not broaden `@match` beyond bookmark routes unless the user explicitly asks for another surface.
+Keep broad `@match` coverage for X/Twitter SPA navigation, and keep route gating in code so the panel appears only on bookmark routes.
 
 ## 4. Configure The Bridge
 
