@@ -1,6 +1,6 @@
 # Adaptation Guide
 
-This guide explains how to adapt X Bookmark Tinder to another person's machine and knowledge-base inbox.
+This guide explains how to adapt Triage Deck to another person's machine and knowledge-base inbox.
 
 The intended workflow is agent-assisted: a user clones the repo, gives an agent their environment details, and the agent updates config, docs, and validation steps without changing the local-first architecture.
 
@@ -61,6 +61,7 @@ Set:
 - userscript `obsidianFolder`
 - bridge `XBT_OBSIDIAN_BIN`
 - bridge `XBT_OBSIDIAN_VAULT`
+- bridge `XBT_VAULT_ROOT`
 - bridge `XBT_ALLOWED_FOLDER_PREFIX`
 
 Validate:

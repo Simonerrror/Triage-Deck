@@ -1,4 +1,4 @@
-# X Bookmark Tinder
+# Triage Deck
 
 Local-first triage for X/Twitter bookmarks.
 
@@ -68,8 +68,9 @@ Install one userscript manager in the browser profile where you already use X:
 Then install:
 
 - [`userscript/x-bookmark-tinder.user.js`](userscript/x-bookmark-tinder.user.js)
+- or the raw userscript URL: `https://raw.githubusercontent.com/Simonerrror/Triage-Deck/main/userscript/x-bookmark-tinder.user.js`
 
-Important: most userscript managers store their own copy. Editing the file in this repo usually does not update the installed script automatically. Reinstall or paste the new script when you change it.
+The userscript includes `@downloadURL` and `@updateURL` metadata for Tampermonkey-compatible updates when installed from the raw GitHub URL. If you paste the script manually, paste the new version again after changes.
 
 ### 2. Configure The Inbox Target
 
@@ -88,8 +89,11 @@ Edit environment variables for [`scripts/obsidian_bridge.py`](scripts/obsidian_b
 ```bash
 XBT_OBSIDIAN_BIN=obsidian
 XBT_OBSIDIAN_VAULT=YOUR_VAULT_NAME
+XBT_VAULT_ROOT="/absolute/path/to/your/vault"
 XBT_ALLOWED_FOLDER_PREFIX="Path/Inside/Vault/Inbox/X Bookmarks"
 ```
+
+`XBT_VAULT_ROOT` is the most portable option across macOS, Windows, and Linux. If it is omitted, the bridge tries to discover the Obsidian vault from the platform-specific Obsidian config.
 
 If your knowledge base is not Obsidian, adapt the bridge first. The bridge boundary is intentionally small: browser sends `{ vault, folder, file_name, content }`; the local script decides how to persist it.
 
@@ -223,7 +227,7 @@ Before publishing a personal fork, review:
 - default vault/folder names
 - hardcoded local paths
 - bridge token settings
-- whether `POST /restart` should be enabled in your environment
+- whether `POST /restart` should be enabled with `XBT_BRIDGE_ALLOW_RESTART=1`; it is disabled by default and token-protected when `XBT_BRIDGE_TOKEN` is set
 
 ## Development
 

@@ -1,13 +1,15 @@
 // ==UserScript==
-// @name         X Bookmark Tinder
-// @namespace    https://local.hobby.ai/x-bookmark-tinder
-// @version      0.2.9
+// @name         Triage Deck
+// @namespace    https://github.com/Simonerrror/Triage-Deck
+// @version      0.3.0
 // @description  Triage X bookmarks with arrow keys and send selected posts to Obsidian.
 // @match        https://x.com/i/bookmarks*
 // @match        https://twitter.com/i/bookmarks*
 // @grant        GM_xmlhttpRequest
 // @connect      127.0.0.1
 // @connect      localhost
+// @downloadURL  https://raw.githubusercontent.com/Simonerrror/Triage-Deck/main/userscript/x-bookmark-tinder.user.js
+// @updateURL    https://raw.githubusercontent.com/Simonerrror/Triage-Deck/main/userscript/x-bookmark-tinder.user.js
 // @run-at       document-idle
 // ==/UserScript==
 
@@ -80,6 +82,7 @@
     lastHighlightedId: null,
     dismissed: loadUiState(),
     routeActive: false,
+    actionPending: false,
     bridge: {
       status: "checking",
       pending: false,
@@ -777,7 +780,7 @@
       "status: inbox",
       `kind: ${kind}`,
       "source: x",
-      "triage_source: x-bookmark-tinder",
+      "triage_source: triage-deck",
       `author: ${escapeYamlString(bookmark.author)}`,
       `handle: ${escapeYamlString(bookmark.handle.replace(/^@/, ""))}`,
       `url: ${escapeYamlString(bookmark.url)}`,
@@ -1056,17 +1059,19 @@
 
   function renderControls(bookmark) {
     const hasBookmark = Boolean(bookmark);
+    const canAct = hasBookmark && !state.actionPending;
     if (ui.keepButton) {
-      ui.keepButton.disabled = !hasBookmark;
+      ui.keepButton.disabled = !canAct;
     }
     if (ui.deleteButton) {
-      ui.deleteButton.disabled = !hasBookmark;
+      ui.deleteButton.disabled = !canAct;
     }
     if (ui.inboxButton) {
-      ui.inboxButton.disabled = !hasBookmark;
+      ui.inboxButton.disabled = !canAct;
     }
     if (ui.undoButton) {
       ui.undoButton.hidden = !canUndoSafely();
+      ui.undoButton.disabled = state.actionPending;
     }
   }
 
@@ -1367,7 +1372,7 @@
   }
 
   async function takeAction(actionType) {
-    if (!state.routeActive || state.dismissed) {
+    if (!state.routeActive || state.dismissed || state.actionPending) {
       return;
     }
 
@@ -1378,42 +1383,49 @@
       return;
     }
 
-    if (actionType === "delete") {
-      const removed = await removeBookmarkViaUi(bookmark);
-      if (!removed) {
-        showToast("Could not find the remove-bookmark menu item. X probably changed the UI labels.");
-        return;
+    state.actionPending = true;
+    renderControls(bookmark);
+
+    try {
+      if (actionType === "delete") {
+        const removed = await removeBookmarkViaUi(bookmark);
+        if (!removed) {
+          showToast("Could not find the remove-bookmark menu item. X probably changed the UI labels.");
+          return;
+        }
       }
+
+      if (actionType === "inbox") {
+        const delivered = await sendBookmarkToObsidian(bookmark);
+        if (!delivered) {
+          return;
+        }
+
+        const removed = await removeBookmarkViaUi(bookmark);
+        if (!removed) {
+          showToast("Saved to Obsidian, but could not remove the bookmark from X.");
+          return;
+        }
+      }
+
+      markReviewed(bookmark, actionType);
+      state.stats[actionType] += 1;
+
+      recordHistory(
+        actionType === "keep"
+          ? "Kept in X"
+          : actionType === "delete"
+            ? "Deleted"
+            : "Sent to inbox and removed from X",
+        bookmark,
+        actionType
+      );
+
+      advanceQueueAfterAction(bookmark.id, previousIndex);
+    } finally {
+      state.actionPending = false;
+      render();
     }
-
-    if (actionType === "inbox") {
-      const delivered = await sendBookmarkToObsidian(bookmark);
-      if (!delivered) {
-        return;
-      }
-
-      const removed = await removeBookmarkViaUi(bookmark);
-      if (!removed) {
-        showToast("Saved to Obsidian, but could not remove the bookmark from X.");
-        return;
-      }
-    }
-
-    markReviewed(bookmark, actionType);
-    state.stats[actionType] += 1;
-
-    recordHistory(
-      actionType === "keep"
-        ? "Kept in X"
-        : actionType === "delete"
-          ? "Deleted"
-          : "Sent to inbox and removed from X",
-      bookmark,
-      actionType
-    );
-
-    advanceQueueAfterAction(bookmark.id, previousIndex);
-    render();
   }
 
   function undoLastAction() {
@@ -1557,7 +1569,7 @@
       return;
     }
 
-    const restartCommand = "cd /path/to/x-bookmark-tinder && python3 scripts/obsidian_bridge.py";
+    const restartCommand = "cd /path/to/Triage-Deck && python3 scripts/obsidian_bridge.py";
     const copied = await tryClipboardWrite(restartCommand);
     showToast(copied ? "Bridge is down. Restart command copied." : "Bridge is down. Start local bridge from terminal.");
   }
@@ -1583,7 +1595,7 @@
         <div class="xbt-header">
           <div class="xbt-header-copy">
             <p class="xbt-kicker">Bookmark triage</p>
-            <h2 class="xbt-title">X Bookmark Tinder</h2>
+            <h2 class="xbt-title">Triage Deck</h2>
             <div class="xbt-position-row">
               <div id="xbt-position" class="xbt-position-label"><strong>Waiting</strong></div>
               <div class="xbt-progress" aria-hidden="true"><span></span></div>

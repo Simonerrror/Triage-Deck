@@ -1,6 +1,6 @@
 ---
 workflow:
-  name: x-bookmark-tinder-adaptation
+  name: triage-deck-adaptation
   purpose: Adapt a local-first X bookmark triage userscript to a user's OS, browser, and knowledge-base inbox.
   mode: agent-guided-local-setup
 targets:
@@ -37,7 +37,7 @@ validation:
     - bridge health indicator reflects /health
 ---
 
-# X Bookmark Tinder Adaptation Workflow
+# Triage Deck Adaptation Workflow
 
 You are adapting this repository for a real person who wants to triage X/Twitter bookmarks into their own knowledge-base inbox.
 
@@ -121,6 +121,7 @@ Default bridge environment variables:
 - `XBT_BRIDGE_TOKEN`
 - `XBT_OBSIDIAN_BIN`
 - `XBT_OBSIDIAN_VAULT`
+- `XBT_VAULT_ROOT`
 - `XBT_ALLOWED_FOLDER_PREFIX`
 - `XBT_BRIDGE_ALLOW_RESTART`
 
@@ -128,10 +129,11 @@ Adaptation rules:
 
 - For macOS/Linux, prefer `python3 scripts/obsidian_bridge.py`.
 - For Windows, prefer `py scripts\obsidian_bridge.py`.
+- Prefer `XBT_VAULT_ROOT` for portable vault resolution across macOS, Windows, and Linux.
 - If a CLI binary is not on `PATH`, use an absolute path or switch to direct file writes.
 - Keep `XBT_ALLOWED_FOLDER_PREFIX` narrow.
 - If the bridge writes directly to disk, normalize paths per OS and reject `..` path traversal.
-- If restart is not acceptable in the user's environment, set `XBT_BRIDGE_ALLOW_RESTART=0`.
+- Restart is disabled by default. Enable it only when needed with `XBT_BRIDGE_ALLOW_RESTART=1`; if `XBT_BRIDGE_TOKEN` is set, `/restart` must require the same token as `/capture`.
 
 ## 5. Install Path
 

@@ -66,6 +66,7 @@ If your vault layout changes later, update these values at the top of the usersc
 Also update the bridge environment variables:
 
 - `XBT_OBSIDIAN_VAULT`
+- `XBT_VAULT_ROOT`
 - `XBT_ALLOWED_FOLDER_PREFIX`
 - `XBT_OBSIDIAN_BIN`
 
