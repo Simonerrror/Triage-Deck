@@ -82,7 +82,10 @@ Edit the top-level `CONFIG` object in [`userscript/x-bookmark-tinder.user.js`](u
 obsidianVault: "YOUR_VAULT_NAME",
 obsidianFolder: "Path/Inside/Vault/Inbox/X Bookmarks",
 cliBridgeBaseUrl: "http://127.0.0.1:8765",
+bridgeLaunchCommand: "",
 ```
+
+Set `bridgeLaunchCommand` to a local command if you want the red bridge lamp to copy it when the bridge is not running, for example `cd /path/to/Triage-Deck && python3 scripts/obsidian_bridge.py`.
 
 Edit environment variables for [`scripts/obsidian_bridge.py`](scripts/obsidian_bridge.py):
 
@@ -144,7 +147,7 @@ Panel controls:
 
 - `Update`: rescan visible bookmarks.
 - `Shift+Update`: restart reviewed state for the visible set.
-- green/red lamp: bridge health. Green rechecks `/health`; red shows the failure. If the bridge is reachable, degraded, and `restart_allowed` is true, clicking the lamp asks for confirmation before calling `POST /restart`.
+- green/red lamp: bridge health. Green rechecks `/health`; red shows the failure. If the bridge is down and `bridgeLaunchCommand` is configured, clicking the lamp copies that command. If the bridge is reachable, degraded, and `restart_allowed` is true, clicking the lamp asks for confirmation before calling `POST /restart`.
 - `x`: hide panel; the launcher can reopen it.
 
 ## Platform Notes

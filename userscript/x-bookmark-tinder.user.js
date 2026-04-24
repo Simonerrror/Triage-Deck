@@ -26,6 +26,7 @@
     cliBridgeUrl: "http://127.0.0.1:8765/capture",
     cliBridgeHealthUrl: "http://127.0.0.1:8765/health",
     cliBridgeRestartUrl: "http://127.0.0.1:8765/restart",
+    bridgeLaunchCommand: "",
     cliBridgeToken: "",
     bridgeFallbackToUri: false,
     rescanIntervalMs: 1400,
@@ -1572,7 +1573,17 @@
     }
 
     if (state.bridge.status === "down") {
-      showToast("Bridge is not running. Start the local bridge from terminal, then click the lamp again.");
+      if (CONFIG.bridgeLaunchCommand) {
+        const copied = await tryClipboardWrite(CONFIG.bridgeLaunchCommand);
+        showToast(
+          copied
+            ? "Bridge is not running. Launch command copied."
+            : "Bridge is not running. Start the local bridge from terminal."
+        );
+        return;
+      }
+
+      showToast("Bridge is not running. Start the local bridge from terminal.");
       return;
     }
 
