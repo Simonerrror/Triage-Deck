@@ -107,7 +107,7 @@ function slugify(input) {
 }
 
 function buildNotePath(bookmark) {
-  return `Sergio/00_System/Inbox/X Bookmarks/${bookmark.date}-${slugify(bookmark.title)}.md`;
+  return `Inbox/X Bookmarks/${bookmark.date}-${slugify(bookmark.title)}.md`;
 }
 
 function renderTags(tags) {
@@ -180,7 +180,7 @@ function renderBookmark() {
     `;
     ui.noteTitle.textContent = "No active bookmark";
     ui.noteKind.textContent = "done";
-    ui.notePath.textContent = "Sergio/00_System/Inbox/X Bookmarks";
+    ui.notePath.textContent = "Inbox/X Bookmarks";
     ui.bookmarkTags.innerHTML = "";
     return;
   }

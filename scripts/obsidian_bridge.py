@@ -12,6 +12,7 @@ import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path, PurePosixPath
+from sys import platform
 
 
 HOST = os.environ.get("XBT_BRIDGE_HOST", "127.0.0.1")
@@ -19,7 +20,8 @@ PORT = int(os.environ.get("XBT_BRIDGE_PORT", "8765"))
 TOKEN = os.environ.get("XBT_BRIDGE_TOKEN", "")
 OBSIDIAN_BIN = os.environ.get("XBT_OBSIDIAN_BIN", "obsidian")
 DEFAULT_VAULT = os.environ.get("XBT_OBSIDIAN_VAULT", "YOUR_VAULT_NAME")
-ALLOW_RESTART = os.environ.get("XBT_BRIDGE_ALLOW_RESTART", "1").lower() not in {
+VAULT_ROOT = os.environ.get("XBT_VAULT_ROOT", "")
+ALLOW_RESTART = os.environ.get("XBT_BRIDGE_ALLOW_RESTART", "0").lower() not in {
     "0",
     "false",
     "no",
@@ -28,13 +30,37 @@ ALLOWED_FOLDER_PREFIX = os.environ.get(
     "XBT_ALLOWED_FOLDER_PREFIX",
     "Inbox/X Bookmarks",
 )
+
+
+def obsidian_config_path() -> Path:
+    if platform == "darwin":
+        return Path.home() / "Library/Application Support/obsidian/obsidian.json"
+
+    if platform == "win32":
+        appdata = os.environ.get("APPDATA")
+        if not appdata:
+            raise ValueError("APPDATA is not set; configure XBT_VAULT_ROOT explicitly.")
+        return Path(appdata) / "obsidian/obsidian.json"
+
+    xdg_config_home = os.environ.get("XDG_CONFIG_HOME")
+    config_root = Path(xdg_config_home) if xdg_config_home else Path.home() / ".config"
+    return config_root / "obsidian/obsidian.json"
+
+
+def path_is_inside(folder_path: PurePosixPath, allowed_prefix: PurePosixPath) -> bool:
+    return folder_path == allowed_prefix or folder_path.parts[: len(allowed_prefix.parts)] == allowed_prefix.parts
+
+
 def resolve_vault_root(vault_name: str) -> Path:
-    config_path = Path.home() / "Library/Application Support/obsidian/obsidian.json"
+    if VAULT_ROOT:
+        return Path(VAULT_ROOT).expanduser()
+
+    config_path = obsidian_config_path()
     data = json.loads(config_path.read_text(encoding="utf-8"))
     for vault_data in data.get("vaults", {}).values():
         if Path(vault_data.get("path", "")).name == vault_name:
             return Path(vault_data["path"])
-    raise ValueError(f"Vault path not found for {vault_name!r}.")
+    raise ValueError(f"Vault path not found for {vault_name!r}; configure XBT_VAULT_ROOT explicitly.")
 
 
 def send_cors_headers(handler: BaseHTTPRequestHandler) -> None:
@@ -64,7 +90,7 @@ def sanitize_path(folder: str, file_name: str) -> str:
     if ".." in folder_path.parts or ".." in PurePosixPath(file_name).parts:
         raise ValueError("Path traversal is not allowed.")
 
-    if not str(folder_path).startswith(str(allowed_prefix)):
+    if not path_is_inside(folder_path, allowed_prefix):
         raise ValueError("Folder is outside the allowed inbox prefix.")
 
     clean_name = file_name.strip().replace("\x00", "")
@@ -114,6 +140,7 @@ def health_payload() -> tuple[int, dict]:
             "vault": DEFAULT_VAULT,
             "vault_path": vault_path,
             "vault_error": vault_error,
+            "vault_root_override": bool(VAULT_ROOT),
             "allowed_folder_prefix": ALLOWED_FOLDER_PREFIX,
             "token_required": bool(TOKEN),
             "restart_allowed": ALLOW_RESTART,
@@ -155,6 +182,10 @@ class BridgeHandler(BaseHTTPRequestHandler):
         json_response(self, status, payload)
 
     def do_POST(self) -> None:  # noqa: N802
+        if TOKEN and self.headers.get("X-XBT-Token", "") != TOKEN:
+            json_response(self, 403, {"ok": False, "error": "Invalid bridge token."})
+            return
+
         if self.path == "/restart":
             if not ALLOW_RESTART:
                 json_response(self, 403, {"ok": False, "error": "Bridge restart is disabled."})
@@ -166,10 +197,6 @@ class BridgeHandler(BaseHTTPRequestHandler):
 
         if self.path != "/capture":
             json_response(self, 404, {"ok": False, "error": "Not found."})
-            return
-
-        if TOKEN and self.headers.get("X-XBT-Token", "") != TOKEN:
-            json_response(self, 403, {"ok": False, "error": "Invalid bridge token."})
             return
 
         try:
