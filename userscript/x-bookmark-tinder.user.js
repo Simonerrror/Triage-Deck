@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         Triage Deck
 // @namespace    https://github.com/Simonerrror/Triage-Deck
-// @version      0.3.0
+// @version      0.3.1
 // @description  Triage X bookmarks with arrow keys and send selected posts to Obsidian.
-// @match        https://x.com/i/bookmarks*
-// @match        https://twitter.com/i/bookmarks*
+// @match        https://x.com/*
+// @match        https://twitter.com/*
 // @grant        GM_xmlhttpRequest
 // @connect      127.0.0.1
 // @connect      localhost
